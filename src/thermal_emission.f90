@@ -278,9 +278,11 @@ subroutine allocate_temperature(Nc)
 
   integer :: alloc_status
 
-  allocate(Tdust(Nc), Tdust_old(Nc), stat=alloc_status)
-  if (alloc_status > 0) call error('Allocation error Tdust')
-  Tdust = 0.0 ; Tdust_old=0.0
+  if (.not.allocated(Tdust)) then
+     allocate(Tdust(Nc), Tdust_old(Nc), stat=alloc_status)
+     if (alloc_status > 0) call error('Allocation error Tdust')
+     Tdust = 0.0 ; Tdust_old=0.0
+  endif
 
   if (lRE_nLTE) then
      allocate(Tdust_1grain(grain_RE_nLTE_start:grain_RE_nLTE_end,Nc),stat=alloc_status)

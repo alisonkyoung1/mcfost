@@ -7,7 +7,7 @@ module read_phantom
   use mess_up_SPH
 
   implicit none
-
+  logical, public :: got_temperature
 contains
 
   subroutine read_phantom_bin_files(iunit,n_files, filenames, x,y,z,h,vx,vy,vz,T_gas,particle_id,massgas,massdust,&
@@ -46,7 +46,7 @@ contains
     real(dp), allocatable, dimension(:,:) :: xyzh,xyzmh_ptmass,vxyz_ptmass,dustfrac,vxyzu,nucleation
     type(dump_h) :: hdr
     logical :: got_h,got_dustfrac,got_itype,tagged,matched
-    logical :: got_temperature,got_u,lpotential
+    logical :: got_u,lpotential
     integer :: ifile, np0, ntypes0, np_tot, ntypes_tot, ntypes_max, ndustsmall, ndustlarge
 
     ! We first read the number of particules in each phantom file

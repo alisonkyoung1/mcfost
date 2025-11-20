@@ -5,7 +5,7 @@ module SPH2mcfost
   use utils
   use sort, only : find_kth_smallest_inplace
   use density, only : normalize_dust_density, reduce_density, read_Voronoi_fits_file, find_non_empty_cell
-  use read_phantom, only : read_phantom_bin_files, read_phantom_hdf_files
+  use read_phantom, only : read_phantom_bin_files, read_phantom_hdf_files, got_temperature
   use sort, only : index_quicksort
   use stars, only : compute_stellar_parameters
 
@@ -109,7 +109,7 @@ contains
     call SPH_to_Voronoi(n_SPH, ndusttypes, particle_id, x,y,z,h, vx,vy,vz, &
          T_gas, massgas,massdust,rho,rhodust,SPH_grainsizes, SPH_limits, check_previous_tesselation, &
          is_ghost, ldust_moments, dust_moments, mass_per_H, mask=mask)
-
+    
     deallocate(x,y,z,h)
     if (allocated(vx)) deallocate(vx,vy,vz)
     if (allocated(rhodust)) deallocate(rhodust,massdust)
@@ -117,7 +117,10 @@ contains
     ! setup needed for Atomic line transfer
     if (lemission_atom) then
        call hydro_to_Voronoi_atomic(n_SPH,T_gas,vturb,massgas,mass_ne_on_massgas,atomic_mask)
+    elseif (got_temperature) then
+       call import_phantom_gastemps(n_SPH,T_gas)
     endif
+    
     deallocate(massgas)
     if (allocated(rho)) deallocate(rho)
     if (allocated(vturb)) deallocate(vturb)
@@ -746,6 +749,42 @@ contains
     return
 
   end subroutine hydro_to_Voronoi_atomic
+
+  !*********************************************************
+
+  subroutine import_phantom_gastemps(n_SPH,T_tmp)
+    ! copy gas temperature from hydro code
+    ! ************************************************************************************ !
+    ! n_sph : number of points in the input model
+    ! particle_id : index of the particle / cell centre in the input model
+    ! T_tmp : temperature of the particle/ cell
+    ! ************************************************************************************ !
+    use parametres
+    use Voronoi_grid, only : Voronoi
+    use Temperature, only : Tdust,Tdust_old
+
+    integer, intent(in) :: n_SPH
+    real(dp), dimension(n_SPH), intent(in) :: T_tmp
+
+    integer :: icell,voroindex,alloc_status
+    real, parameter :: Lextent = 1.01
+
+    allocate(Tdust(n_cells), Tdust_old(n_cells), stat=alloc_status)
+    if (alloc_status > 0) call error('Allocation error Tdust')
+
+    do icell=1,n_cells
+       voroindex = Voronoi(icell)%id
+       if (voroindex > 0) then
+          Tdust(icell) = T_tmp(voroindex)
+       endif
+    end do
+
+    write(*,*) "Imported Phantom temperatures into Voronoi"
+    write(*,*) "Maximum/minimum Temperature in the model (K):"
+    write(*,*) maxval(Tdust), minval(Tdust)
+
+    return
+  end subroutine import_phantom_gastemps
 
   !*********************************************************
 

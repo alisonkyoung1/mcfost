@@ -32,6 +32,7 @@ module dust_transfer
   use read_idefix, only : read_idefix_model
   use read_pluto, only : read_pluto_files
   use read_spherical_grid, only : read_spherical_model
+  use read_phantom, only : got_temperature
   !$ use omp_lib
 
   implicit none
@@ -153,7 +154,7 @@ subroutine transfert_poussiere()
   call alloc_dust_prop()
 
   call alloc_dynamique()
-
+  
   stream = 0.0
   do i=1, nb_proc
      stream(i) = init_sprng(gtype, i-1,nb_proc,seed,SPRNG_DEFAULT)
@@ -220,7 +221,9 @@ subroutine transfert_poussiere()
 
      if (l_em_disk_image) then ! le disque �met
         if (.not.(ldust_prop.and.lstop_after_init)) then ! we do not need the temperature if we only compute the dust prop
-           call lect_Temperature()
+           if (.not. got_temperature) then
+              call lect_Temperature()
+           endif
         endif
      else ! Seule l'�toile �met
         Tdust=0.0
