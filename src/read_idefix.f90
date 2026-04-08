@@ -72,6 +72,7 @@ contains
        call warning("idefix : using spherical grid")
        nz = (idefix%nx2-1)/2+1
        n_az = idefix%nx3-1
+       if(n_az ==0 ) n_az = 1 ! 2D case
        lregular_theta = .true.
        theta_max = 0.5 * pi - idefix%x2_min
     else
@@ -193,7 +194,7 @@ contains
              icell = cell_map(i,j,phik)
 
              densite_gaz(icell) = rho(i,i2,i3) * udens
-             densite_pouss(:,icell) = rho(i,i2,i3) * udens  ! flat dust distribution
+             dust_density(:,icell) = rho(i,i2,i3) * udens  ! flat dust distribution
 
              ! todo : check in cyl
              vfield3d(icell,1)  = vx1(i,i2,i3) * uvelocity ! vr
